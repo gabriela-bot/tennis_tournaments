@@ -1,0 +1,42 @@
+services:
+    api:
+        build:
+            context: "./"
+            dockerfile: Dockerfile
+            args:
+                user: ${USER}
+                uid: 1000
+        restart: unless-stopped
+        working_dir: /var/www
+        volumes:
+            -   "./:/var/www"
+        networks:
+            - tennis_tournament
+        ports:
+            - "80:80"
+
+    db:
+        image: 'mysql:8.4'
+        restart: unless-stopped
+        ports:
+            - '${FORWARD_DB_PORT:-3306}:3306'
+        environment:
+            MYSQL_ROOT_PASSWORD: 'password'
+            MYSQL_ROOT_HOST: '%'
+            MYSQL_DATABASE: 'tennis_tournament'
+            MYSQL_USER: 'tennis'
+            MYSQL_PASSWORD: 'password'
+            MYSQL_ALLOW_EMPTY_PASSWORD: 1
+        volumes:
+            - 'mysql-serve:/var/lib/mysql'
+        networks:
+            - tennis_tournament
+
+
+networks:
+    tennis_tournament:
+        driver: bridge
+
+volumes:
+    mysql-serve:
+        driver: local

@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# Start PHP-FPM in the background
+composer install
+
+if [ ! -f "/var/www/.env" ]; then
+    cp /var/www/.env.example /var/www/.env
+    php /var/www/artisan key:generate
+fi
+
+php /var/www/artisan storage:link
+
+php /var/www/artisan migrate --force
+# Start Laravel development server in the background
+php /var/www/artisan serve --port=80 --host=0.0.0.0 &
+
+# Replace the shell process with php-fpm (keep container running)
+exec php-fpm
