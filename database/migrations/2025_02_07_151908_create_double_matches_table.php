@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('double_matches', function (Blueprint $table) {
             $table->id();
+            $table->integer('match_number')->default(1);
             $table->unsignedBigInteger('group_one');
             $table->foreign('group_one')->references('id')->on('groups');
             $table->unsignedBigInteger('group_two');

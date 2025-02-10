@@ -2,7 +2,7 @@
 
 namespace App\Casts;
 
-use App\Status;
+use App\Enum\Status;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;

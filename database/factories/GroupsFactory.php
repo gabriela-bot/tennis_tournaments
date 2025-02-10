@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Category;
+use App\Enum\Category;
 use App\Models\Player;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -20,7 +20,7 @@ class GroupsFactory extends Factory
     {
         $category = $this->faker->randomElement(Category::values());
         return [
-            'name' => $this->faker->name(),
+            'name' => $this->faker->country(),
             'player_one' => Player::factory()->withCategory(Category::tryFrom($category)),
             'player_two' => Player::factory()->withCategory(Category::tryFrom($category)),
         ];

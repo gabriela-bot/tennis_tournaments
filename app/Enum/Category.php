@@ -1,12 +1,11 @@
 <?php
 
-namespace App;
+namespace App\Enum;
 
 enum Category: string
 {
     case WOMEN = 'women';
     case MEN = 'men';
-
 
     public static function values(): array
     {

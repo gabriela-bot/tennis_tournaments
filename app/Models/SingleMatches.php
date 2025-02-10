@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
+use App\Interfaces\Players;
+use App\Interfaces\Sides;
+use App\Traits\HasMatch;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class SingleMatches extends Model
+class SingleMatches extends Model implements Sides, Players
 {
     /** @use HasFactory<\Database\Factories\SingleMatchesFactory> */
     use HasFactory;
-
+    use HasMatch;
     protected $fillable = [
         'player_one',
         'player_two',
@@ -21,6 +24,7 @@ class SingleMatches extends Model
         'winner_set_two',
         'winner_set_three',
         'winner_set_one',
+        'match_number'
     ];
 
     public function tournament(){
@@ -46,5 +50,20 @@ class SingleMatches extends Model
     }
     public function playerTwo(){
         return $this->belongsTo(Player::class, 'player_two');
+    }
+
+    public function sideA()
+    {
+        return $this->belongsTo(Player::class, 'player_one');
+    }
+
+    public function sideB()
+    {
+        return $this->belongsTo(Player::class, 'player_two');
+    }
+
+    public function classOfPlayer(): string
+    {
+        return Player::class;
     }
 }

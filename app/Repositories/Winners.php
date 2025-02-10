@@ -1,29 +1,25 @@
 <?php
 
-namespace App\Services;
+namespace App\Repositories;
 
+use App\Models\Groups;
 use App\Models\Player;
-use App\Models\SingleMatches;
-use Illuminate\Support\Facades\Log;
 
 class Winners
 {
-    public $game;
-    public Player $winner;
-    public Player $loser;
+    public $match;
+    public $winner;
+    public $loser;
 
-    /**
-     * @param int $game
-     */
-    public function __construct($game)
+    public function __construct($match)
     {
-        $this->game = $game;
+        $this->match = $match;
     }
 
     public function start() : void
     {
-        $playerOne = $this->game->playerOne;
-        $playerTwo = $this->game->playerTwo;
+        $sideA = $this->match->sideA;
+        $sideB = $this->match->sideB;
 
         $playerFirst = 0;
         $playerSecond = 0;
@@ -37,21 +33,20 @@ class Winners
             $set = $this->step($i);
             $value = '';
 
-
             // Games
             $gameOpen = true;
             while($gameOpen){
                 $one = 0;
                 $two = 0;
 
-                if($playerOne->level > $playerTwo->level) {
+                if($sideA->getLevel() > $sideB->getLevel()) {
                     $one += 1;
                 } else {
                     $two += 1;
                 }
 
-                $totalOne = ($playerOne->reaction + $playerOne->power + $playerOne->speed);
-                $totalTwo = ($playerTwo->reaction + $playerTwo->power + $playerTwo->speed);
+                $totalOne = $sideA->getSkillsScore();
+                $totalTwo = $sideB->getSkillsScore();
 
                 if($totalOne > $totalTwo) {
                     $one += 1;
@@ -72,7 +67,7 @@ class Winners
 
                 $value = $pointsOne.'-'.$pointsTwo;
                 if($pointsTwo == 10 || $pointsOne == 10){
-                    if($playerOne->level > $playerTwo->level && rand(0,1) == 0) {
+                    if($sideA->level > $sideB->level && rand(0,1) == 0) {
                         $pointsOne += 2;
                     } else {
                         $pointsTwo += 2;
@@ -86,42 +81,27 @@ class Winners
 
             if($pointsOne > $pointsTwo) {
                 $playerFirst += 1;
-                $this->game->update([
+                $this->match->update([
                     'set_'.$set => $value,
-                    'winner_set_'.$set => $playerOne->id,
+                    'winner_set_'.$set => $sideA->id,
                 ]);
             } else {
                 $playerSecond += 1;
-                $this->game->update([
+                $this->match->update([
                     'set_'.$set => $value,
-                    'winner_set_'.$set => $playerTwo->id,
+                    'winner_set_'.$set => $sideB->id,
                 ]);
             }
             if($playerSecond == 2 || $playerFirst == 2) break;
         }
 
         if($playerFirst > $playerSecond) {
-            $this->winner = $playerOne;
-            $this->loser = $playerTwo;
+            $this->winner = $sideA;
+            $this->loser = $sideB;
         } else {
-            $this->winner = $playerTwo;
-            $this->loser = $playerOne;
+            $this->winner = $sideB;
+            $this->loser = $sideA;
         }
-    }
-
-    public function randValue(): array
-    {
-        $randOne = rand(0, 50);
-        $randTwo = rand(0, 50);
-
-        if($randOne == $randTwo) {
-            return $this->randValue();
-        }
-
-        return [
-            $randOne,
-            $randTwo,
-        ];
     }
 
     public function step($i) : string
@@ -133,39 +113,14 @@ class Winners
         };
     }
 
-
-    public function getWinner() : Player
+    public function getWinner() : Player|Groups
     {
         return $this->winner;
     }
 
-    public function getLoser() : Player
+    public function getLoser() : Player|Groups
     {
         return $this->loser;
-    }
-
-    private function value(int $one, int $two) : string
-    {
-        $valueOne = match($one) {
-            0 =>  0,
-            1 => 15,
-            2 => 30,
-            3 => 40,
-        };
-
-        $valueTwo = match($two) {
-            0 =>  0,
-            1 => 15,
-            2 => 30,
-            3 => 40,
-        };
-
-        if(!in_array(40, [ $valueOne, $valueTwo ])) {
-            $max = max($valueOne, $valueTwo);
-            ($max === $valueOne) ? $valueOne = 40 : $valueTwo = 40;
-        }
-        return $valueOne.'-'.$valueTwo;
-
     }
 
 

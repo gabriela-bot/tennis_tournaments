@@ -2,13 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Category;
-use App\Models\Player;
-use App\Services\Attributes;
-use Closure;
+use App\Enum\Category;
+use App\Repositories\Attributes;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Facades\Log;
-use Monolog\Level;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Player>
@@ -24,7 +20,9 @@ class PlayerFactory extends Factory
     {
         return [
             'category' =>  $this->faker->randomElement(Category::values()),
-            'name' => $this->faker->name(),
+            'name' => function (array $attributes) {
+                return $this->faker->firstName($attributes['category'] == Category::MEN ? 'male' : 'female') . ' ' .$this->faker->lastName();
+            },
             'level' => $this->faker->numberBetween(0, 100),
         ];
     }

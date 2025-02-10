@@ -1,14 +1,16 @@
 <?php
 
-namespace App\Http\Requests\Tournament;
+namespace App\Http\Requests\Player;
 
 use App\Enum\Category;
 use App\Enum\Status;
+use App\Rules\checkCategoryPlayers;
 use App\Rules\checkPowerOfTwo;
+use App\Rules\checkPowerOfTwoArray;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class CreateTournamentRequest extends FormRequest
+class PlayPlayerRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -26,13 +28,16 @@ class CreateTournamentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'category' => [ 'nullable', Rule::in(Category::values())],
+            'category' => [ 'required', Rule::in(Category::values())],
             'name'=> [ 'nullable', 'string'],
             'date'=> [ 'nullable','date', 'date_format:Y-m-d', 'after:start_date'],
-            'players'=> [ 'nullable','integer', new checkPowerOfTwo(), 'max:32'],
+            'players'=> [ 'required', 'array',  'min:2', 'max:64', new checkPowerOfTwoArray(), new checkCategoryPlayers() ],
+            'players.*'=> [ 'required', 'integer' , 'exists:players,id'  ],
             'status'=> [ 'nullable', Rule::in(Status::values())],
+            'team'=> [ 'nullable', 'integer', Rule::in([0,1])],
         ];
     }
+
 
     public function prepareForValidation()
     {

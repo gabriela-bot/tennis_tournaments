@@ -1,9 +1,8 @@
 <?php
 
-namespace App\Services;
+namespace App\Repositories;
 
-use App\Category;
-use Illuminate\Support\Facades\Log;
+use App\Enum\Category;
 
 class Attributes
 {
@@ -20,7 +19,9 @@ class Attributes
 
     public function generateAttributes($category) : void
     {
-        $percentage = rand(50, 100);
+        if($category instanceof Category){
+            $category = $category->value;
+        }
         if($category == 'women'){
             $this->reaction = rand(70, 100);
             $this->speed = 0;
@@ -31,10 +32,9 @@ class Attributes
             $this->speed = rand(30, 100);
             $this->reaction = 0;
         }
-        if(($this->reaction + $this->power + $this->speed) > $percentage) {
+        if(($this->reaction + $this->power + $this->speed) > 100) {
             $this->generateAttributes($category);
         }
-
     }
 
     public function getReaction(): int

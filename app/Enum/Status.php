@@ -1,10 +1,10 @@
 <?php
 
-namespace App;
+namespace App\Enum;
 
 enum Status: string
 {
-    case FINISH = 'finish';
+    case FINISH = 'done';
     case PENDING = 'pending';
     case CANCEL = 'cancel';
     case ACTIVE = 'active';

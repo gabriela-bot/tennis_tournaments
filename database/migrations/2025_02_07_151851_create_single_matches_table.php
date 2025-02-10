@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('single_matches', function (Blueprint $table) {
             $table->id();
+            $table->integer('match_number')->default(1);
             $table->unsignedBigInteger('player_one');
             $table->foreign('player_one')->references('id')->on('players');
             $table->unsignedBigInteger('player_two');

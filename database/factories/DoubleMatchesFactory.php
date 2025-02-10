@@ -2,9 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Category;
+use App\Enum\Category;
 use App\Models\Groups;
-use App\Models\Player;
 use App\Models\Tournament;
 use Illuminate\Database\Eloquent\Factories\Factory;
 

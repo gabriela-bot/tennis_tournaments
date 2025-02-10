@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Category;
+use App\Enum\Category;
 use App\Models\Player;
 use App\Models\Tournament;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -24,6 +24,7 @@ class SingleMatchesFactory extends Factory
             'player_one' => Player::factory()->withCategory(Category::tryFrom($category)),
             'player_two' => Player::factory()->withCategory(Category::tryFrom($category)),
             'tournament_id' => Tournament::factory()->state(['category' => $category]),
+            'match_number' => 1
         ];
     }
 
