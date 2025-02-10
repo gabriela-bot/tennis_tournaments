@@ -1,4 +1,4 @@
-openapi: 3.1.0
+openapi: 3.0.3
 info:
   title: Tennis Tournament
   version: 1.0.0
@@ -10,13 +10,14 @@ tags:
 paths:
   /api/tournament:
     get:
-      description: Traer listado completo de torneos
+      description: Este endpoint devuelve el listado completo de torneos de tenis creados. Se pueden aplicar filtros opcionales enviándolos como parámetros en la URL.
       tags:
         - tournament
       parameters:
         - name: paginate
           in: query
-          description: Indicar si se require paginado
+          required: false
+          description: Indicar si el resultado se requiere paginado. Enviar 1 en caso de paginado.
           schema:
             type: number
             enum:
@@ -24,7 +25,8 @@ paths:
               - 0
         - name: sort
           in: query
-          description: Indicar el orden de los resultados
+          required: false
+          description: Modificar el orden del que viene el resultado. Por default es DESC. (Puede ser datos ascendentes o descendentes)
           schema:
             type: string
             enum:
@@ -32,7 +34,8 @@ paths:
               - DESC
         - name: order
           in: query
-          description: Indicar por cual columna ordenar los datos
+          required: false
+          description: Modificar por cual columna se ordena el resultado. Por default es "id".
           schema:
             type: string
             enum:
@@ -41,23 +44,23 @@ paths:
               - category
               - team
               - players
+              - id
         - name: name
           in: query
-          description: Nombre del torneo
+          description: Nombre o parte del nombre.
           required: false
           schema:
             type: string
         - name: date
           in: query
-          description: Fecha del torneo
+          description: Fecha del torneo. Formato (Y-m-d)
           required: false
           schema:
             type: string
-            format: "Y-m-d"
         - name: category
           in: query
           required: false
-          description: Category del torneo
+          description: Categoria del torneo.
           schema:
             type: string
             enum:
@@ -76,7 +79,7 @@ paths:
               - cancel
         - name: team
           in: query
-          description: Torneo en grupos o singles
+          description: Torneo dobles o simples
           required: false
           schema:
             type: number
@@ -86,7 +89,7 @@ paths:
         - name: players
           in: query
           required: false
-          description: Numero de jugadores
+          description: Número de jugadores
           schema:
             type: number
       responses:
@@ -97,46 +100,145 @@ paths:
                 $ref: '#/components/schemas/TournamentResponse'
           description: Lista de torneos
     post:
-      description: Crear un torneo
       tags:
         - tournament
+      description: Crear un nuevo torneo
       requestBody:
-        application/json:
-          $ref: ''
-  /api/tournament/{tournament_id}/play:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TournamentRequest"
+      responses:
+        '200':
+          description: "respuesta"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TournamentResponse"
+  /api/tournament/{tournament}/play:
     post:
       tags:
         - tournament
-      description: Comenzar un nuevo torneo
-      responses:
-        '200':
-          description: Crear nuevo Torneo
-          content:
-            appplication/json
+      description: Inicia un torneo ya creado
       parameters:
-        - name: tournament_id
+        - name: tournament
           in: path
+          description: "Id de torneo que quiere iniciar"
           required: true
           schema:
-            type: integer
-            format: int64
+            type: string
+      responses:
+        '200':
+          description: "respuesta"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TournamentResponse'
   /api/tournament/new-play:
     post:
       tags:
         - tournament
-      description: Crear y comenzar nuevo torneo
+      description: Crea un torneo y inicialo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TournamentRequest"
       responses:
         '200':
-          description: Traer listado completo de torneos
+          description: "Respuesta"
           content:
-            appplication/json
-components:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tournament:
+                    $ref: "#/components/schemas/TournamentResponse"
+                  lastMatch:
+                    $ref: "#/components/schemas/MatchesResponse"
+                  players:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PlayersResponse"
+                  matches:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/MatchesResponse"
+                  groups:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/GroupResponse"
+  /api/tournament/{tournament}:
+    get:
+      description: Show de torneo
+      tags:
+        - tournament
+      parameters:
+        - name: tournament
+          in: path
+          required: true
+          description: "Id de torneo"
+          schema:
+            type: number
+      responses:
+        '200':
+          description: "respuesta"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tournament:
+                    $ref: "#/components/schemas/TournamentResponse"
+                  lastMatch:
+                    $ref: "#/components/schemas/MatchesResponse"
+                  players:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PlayersResponse"
+                  matches:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/MatchesResponse"
+                  groups:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/GroupResponse"
+components: 
   schemas:
-    Tournament:
-      type: Object
+    GroupResponse:
+      type: object
+      properties:
+        name: 
+          type: string
+        player_one:
+          type: string
+    PlayersResponse:
+      type: object
+      properties:
+        name: 
+          type: string
+        level:
+          type: number
+          example: 90
+        category:
+          type: string
+          example: "women"
+        speed:
+          type: number 
+          example: 30
+    MatchesResponse:
+      type: object
+      properties:
+        winner:
+          type: string
+          example: "Federico F."
+    TournamentRequest:
+      type: object
       properties:
         name:
           type: string
+          example: "US Open"
         category:
           type: string
           example: "women"
@@ -150,24 +252,38 @@ components:
           type: number
           example: 16
     TournamentResponse:
-      type: Object
-      :
-        properties:
-          winner_player:
-            type: string
-            example: "David N."
-            description: Unicamente aparece si el torneo es en simple
-          second_player:
-            type: string
-            example: "Robert F."
-            description: Unicamente aparece si el torneo es en simple
-          winner_group:
-            type: string
-            example: "Juan P. & Gonzalo M. - Argentina"
-            description: Unicamente aparece si el torneo es en grupos
-          second_group:
-            type: string
-            example: "Gonzalo H. & Rodrigo P. - Israel"
-            description: Unicamente aparece si el torneo es en grupos
+      type: object
+      properties:
+        name:
+          type: string
+          example: "US Open"
+        category:
+          type: string
+          example: "women"
+        date:
+          type: string
+          example: "2025-09-10"
+        team:
+          type: number
+          example: 1
+        players:
+          type: number
+          example: 16
+        winner_player:
+          type: string
+          example: "David N."
+          description: Unicamente aparece si el torneo es en simple
+        second_player:
+          type: string
+          example: "Robert F."
+          description: Unicamente aparece si el torneo es en simple
+        winner_group:
+          type: string
+          example: "Juan P. & Gonzalo M. - Argentina"
+          description: Unicamente aparece si el torneo es en grupos
+        second_group:
+          type: string
+          example: "Gonzalo H. & Rodrigo P. - Israel"
+          description: Unicamente aparece si el torneo es en grupos
 
 
