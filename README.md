@@ -78,3 +78,6 @@ El archivo YAML que define la documentación de la API se encuentra en:
 `public/tennis_tournament.yaml`
 
 
+## Estructura base de datos
+
+![DDBB](/public/doc/migrations.png)
