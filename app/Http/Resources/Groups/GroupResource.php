@@ -20,7 +20,8 @@ class GroupResource extends JsonResource
             'reaction' => $this->getReaction(),
             'power' => $this->getPower(),
             'speed' => $this->getSpeed(),
-            'category' => $this->getCategory()
+            'category' => $this->getCategory(),
+            'id' => $this->id
         ];
     }
 }

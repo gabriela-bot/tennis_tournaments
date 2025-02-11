@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enum\Status;
+use App\Exceptions\InvalidRequestApiException;
 use App\Http\Resources\Groups\GroupCollection;
 use App\Http\Resources\Matches\DoubleMatchesCollection;
 use App\Http\Resources\Matches\DoubleMatchesResponse;
@@ -16,7 +17,9 @@ use App\Models\Player;
 use App\Models\SingleMatches;
 use App\Models\Tournament;
 use App\Repositories\Matches;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Str;
 
 class TournamentService
 {
@@ -106,8 +109,22 @@ class TournamentService
         ]);
 
         $paginate = $request->get('paginate', false);
-        $order = $request->get('order', 'id');
-        $sort = $request->get('sort', 'asc');
+
+        if(!in_array($paginate, [1,0])){
+            throw new InvalidRequestApiException('Invalid paginate parameters.', Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $order =Str::lower( $request->get('order', 'id'));
+
+        if(!in_array($order, ['name', 'category', 'team', 'date','status','players','id'])){
+            throw new InvalidRequestApiException('Invalid order parameters.', Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $sort = Str::upper($request->get('sort', 'asc'));
+
+        if(!in_array($sort, ['ASC', 'DESC'])){
+            throw new InvalidRequestApiException('Invalid sort parameters.', Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
 
         $query = Tournament::where(
             function ($query) use ($parameter) {
@@ -133,12 +150,15 @@ class TournamentService
             $groups = Groups::whereHas('doubleMatchesOne', fn($query) => $query->where('tournament_id', $this->tournament->id))
                 ->orWhereHas('doubleMatchesTwo', fn($query) => $query->where('tournament_id', $this->tournament->id))
                 ->get();
-            return [
+            $data = [
                 'tournament' => new TournamentResource($this->tournament),
-                'lastMatch' => new DoubleMatchesResponse($lastMatch),
                 'matches' => new DoubleMatchesCollection($this->tournament->doubleMatches()->orderBy('id', 'ASC')->get()),
                 'groups' => new GroupCollection($groups)
             ];
+            if($lastMatch){
+                $data['lastMatch'] = new DoubleMatchesResponse($lastMatch);
+            }
+            return $data;
         } else {
             $lastMatch = $this->tournament->singleMatches()->whereNotNull('winner_id')->orderBY('id', 'DESC')->with([
                 'winner',
@@ -147,12 +167,15 @@ class TournamentService
             $players = Player::whereHas('matchesPlayerTwo', fn($query) => $query->where('tournament_id', $this->tournament->id))
                 ->orWhereHas('matchesPlayerOne', fn($query) => $query->where('tournament_id', $this->tournament->id))
                 ->get();
-            return [
+            $data = [
                 'tournament' => new TournamentResource($this->tournament),
-                'lastMatch' => new SingleMatchesResponse($lastMatch),
                 'matches' => new SingleMatchesCollection($this->tournament->singleMatches()->orderBy('id', 'ASC')->get()),
                 'players' => new PlayerCollection($players)
             ];
+            if($lastMatch){
+                $data['lastMatch'] = new SingleMatchesResponse($lastMatch);
+            }
+            return $data;
         }
     }
 }

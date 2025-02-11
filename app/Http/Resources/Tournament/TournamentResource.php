@@ -21,6 +21,7 @@ class TournamentResource extends JsonResource
     {
 
         return [
+            'id' => $this->id,
             'name' => $this->name,
             'category' => $this->category,
             'date' => $this->date,

@@ -1,0 +1,723 @@
+openapi: 3.1.0
+info:
+  title: Tennis Tournament
+  version: 1.0.0
+  contact:
+    name: "Gabriela Mastrobono"
+    email: "mastrobonongabriela@gmail.com"
+servers:
+  - url: 'http://localhost'
+    description: "Local Server"
+tags:
+  - name: Tournament
+    description: Listado de endpoint de Torneos de tenis.
+  - name: Player
+    description: Listado de endpoint referido a Jugadores
+paths:
+  /api/tournament:
+    get:
+      description: "Obtiene el listado completo de torneos de tenis creados. Se pueden aplicar filtros opcionales enviándolos como parámetros en la URL."
+      tags:
+        - Tournament
+      parameters:
+        - name: paginate
+          in: query
+          required: false
+          description: "Indica si el resultado debe estar paginado. Enviar 1 para paginar, 0 para no paginar."
+          schema:
+            type: number
+            enum:
+              - 1
+              - 0
+        - name: sort
+          in: query
+          required: false
+          description: "Define el orden de los resultados. Por defecto, es DESC. (Valores permitidos: ASC, DESC)"
+          schema:
+            type: string
+            enum:
+              - ASC
+              - DESC
+        - name: order
+          in: query
+          required: false
+          description: "Define la columna por la cual se ordenarán los resultados. El valor por defecto es `id`."
+          schema:
+            type: string
+            enum:
+              - date
+              - name
+              - category
+              - team
+              - players
+              - id
+        - name: name
+          in: query
+          description: "Filtra los torneos por nombre o parte del nombre."
+          required: false
+          schema:
+            type: string
+        - name: date
+          in: query
+          description: "Filtra los torneos por fecha. Formato esperado: `YYYY-MM-DD`."
+          required: false
+          schema:
+            type: string
+        - name: category
+          in: query
+          required: false
+          description: "Filtra los torneos por categoría."
+          schema:
+            type: string
+            enum:
+              - men
+              - women
+        - name: status
+          in: query
+          required: false
+          description: "Filtra los torneos según su estado."
+          schema:
+            type: string
+            enum:
+              - done
+              - active
+              - pending
+              - cancel
+        - name: team
+          in: query
+          description: "Indica si el torneo es de dobles (`1`) o individuales (`0`)."
+          required: false
+          schema:
+            type: number
+            enum:
+              - 1
+              - 0
+        - name: players
+          in: query
+          required: false
+          description: "Filtra los torneos según el número de jugadores."
+          schema:
+            type: number
+      responses:
+        '200':
+          description: "Lista de torneos obtenida exitosamente."
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TournamentResponse'
+        '422':
+          description: "Parámetro inválido."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExceptionApi"
+        '400':
+          description: "Error del sistema."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExceptionApi"
+    post:
+      tags:
+        - Tournament
+      description: "Crea un nuevo torneo de tenis."
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TournamentRequest"
+      responses:
+        '201':
+          description: "Torneo creado exitosamente."
+          content:
+            application/json:
+              schema:
+                properties:
+                  tournament:
+                    $ref: "#/components/schemas/TournamentResponse"
+        '422':
+          description: "Error de validación. Algún dato enviado no es válido."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Validation"
+        '400':
+          description: "Error del sistema."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExceptionApi"
+  /api/tournament/{tournament}/play:
+    post:
+      tags:
+        - Tournament
+      description: "Inicia un torneo previamente creado."
+      parameters:
+        - name: tournament
+          in: path
+          description: "ID del torneo que se desea iniciar."
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "Torneo iniciado correctamente."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DoneTournament'
+        '404':
+          description: "El torneo no fue encontrado."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExceptionApi"
+        '409':
+          description: "El torneo ya ha sido iniciado previamente."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExceptionApi"
+  /api/tournament/new-play:
+    post:
+      tags:
+        - Tournament
+      description: "Crea un nuevo torneo y lo inicia inmediatamente."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TournamentRequest"
+      responses:
+        '200':
+          description: "Torneo creado e iniciado correctamente."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DoneTournament"
+        '404':
+          description: "No se pudo encontrar el torneo especificado."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExceptionApi"
+  /api/tournament/{tournament}:
+    get:
+      description: "Muestra los detalles de un torneo específico."
+      tags:
+        - Tournament
+      parameters:
+        - name: tournament
+          in: path
+          required: true
+          description: "ID del torneo que se desea consultar."
+          schema:
+            type: number
+      responses:
+        '200':
+          description: "Detalles del torneo obtenidos exitosamente."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DoneTournament"
+        '404':
+          description: "El torneo no fue encontrado."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExceptionApi"
+  /api/player:
+    get:
+      tags:
+        - Player
+      description: "Obtiene el listado de todos los jugadores, con filtros opcionales."
+      parameters:
+        - name: name
+          in: query
+          description: "Nombre completo o parcial del jugador."
+          required: false
+          schema:
+            type: string
+        - name: level
+          in: query
+          description: "Nivel de habilidad del jugador."
+          required: false
+          schema:
+            type: number
+        - name: category
+          in: query
+          description: "Categoría del jugador"
+          required: false
+          schema:
+            type: string
+            enum:
+              - women
+              - men
+        - name: speed
+          in: query
+          description: "Velocidad del jugador."
+          required: false
+          schema:
+            type: number
+        - name: reaction
+          in: query
+          description: "Tiempo de reacción del jugador."
+          required: false
+          schema:
+            type: number
+        - name: power
+          in: query
+          description: "Fuerza del jugador."
+          required: false
+          schema:
+            type: number
+        - name: paginate
+          in: query
+          required: false
+          description: "Indica si el resultado debe estar paginado. Enviar 1 para paginar, 0 para no paginar."
+          schema:
+            type: number
+            enum:
+              - 1
+              - 0
+        - name: sort
+          in: query
+          required: false
+          description: "Define el orden de los resultados. Por defecto, es DESC. (Valores permitidos: ASC, DESC)"
+          schema:
+            type: string
+            enum:
+              - ASC
+              - DESC
+        - name: order
+          in: query
+          required: false
+          description: "Define la columna por la cual se ordenarán los resultados. El valor por defecto es `id`."
+          schema:
+            type: string
+            enum:
+              - name
+              - id
+              - power
+              - reaction
+              - level
+              - speed
+              - category
+      responses:
+        '200':
+          description: "Listado de jugadores obtenido exitosamente."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PlayersResponse"
+        '422':
+          description: "Parámetro inválido."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExceptionApi"
+        '400':
+          description: "Error del sistema."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExceptionApi"
+  /api/player/tournament:
+    post:
+      description: "Crea y comienza un nuevo torneo utilizando los ID de jugadores previamente registrados. El torneo se genera e inicia de forma inmediata, sin necesidad de pasos adicionales."
+      tags:
+        - Player
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlayerRequest"
+      responses:
+        '200':
+          description: 'Torneo creado e iniciado exitosamente.'
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DoneTournament"
+        '422':
+          description: "Error de validación. Algún dato enviado no es válido."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Validation"
+        '400':
+          description: "Error del sistema."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExceptionApi"
+  /api/player/tournament/new-player:
+    post:
+      description: "Creación de un torneo a partir de jugadores nuevos registrados. El torneo se genera e inicia de forma inmediata."
+      tags:
+        - Player
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewPlayerRequest"
+      responses:
+        '200':
+          description: 'Torneo creado e iniciado exitosamente.'
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DoneTournament"
+        '422':
+          description: "Error de validación. Algún dato enviado no es válido."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Validation"
+        '400':
+          description: "Error del sistema."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExceptionApi"
+  /api/player/random:
+    get:
+      tags:
+        - Player
+      description: "Api para utilizar de prueba. Devuelve array de usuarios de la categoria requerida. Seleccionara aleatoremente un listado de jugadores."
+      parameters:
+        - name: category
+          in: query
+          description: Categoria de los jugadores a retornar
+          required: true
+          schema:
+            type: string
+            enum:
+              - women
+              - men
+        - name: total
+          in: query
+          description: Total de jugadores que quiere retornar
+          required: false
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Array de id de jugadores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: number
+components:
+  schemas:
+    GroupResponse:
+      type: object
+      properties:
+        name:
+          type: string
+          description: "Nombre del grupo"
+          example: "Argentina"
+        players:
+          type: string
+          description: "Nombre de los jugadores del grupo"
+          example: "Laney G. & Alfreda P. - Ireland"
+        level:
+          type: number
+          description: "Nivel de habilidad de la suma de del nivel de cada jugador"
+          example: 90
+        category:
+          type: string
+          description: "Categoria del grupo"
+          example: "women"
+        speed:
+          type: number
+          description: "Velocidad de la suma de del velocidad de cada jugador"
+          example: 30
+        reaction:
+          type: number
+          description: "Tiempo de reaccion de la suma de del tiempo de reaccion de cada jugador"
+          example: 30
+        power:
+          type: number
+          description: "Fuerza de la suma de del fuerza de cada jugador"
+          example: 30
+        id:
+          type: number
+          example: 2
+    PlayersResponse:
+      type: object
+      properties:
+        name:
+          type: string
+          description: "Nombre del jugador"
+          example: "Giuseppe Feil"
+        level:
+          type: number
+          description: "Nivel de habilidad de jugador"
+          example: 90
+        category:
+          type: string
+          description: "Catgoria del jugador"
+          example: "women"
+        speed:
+          type: number
+          description: "Velocidad de jugador"
+          example: 30
+        reaction:
+          type: number
+          description: "Tiempo de reaccion de jugador"
+          example: 30
+        power:
+          type: number
+          description: "Fuerza de jugador"
+          example: 30
+        id:
+          type: number
+          example: 2
+    MatchesResponse:
+      type: object
+      properties:
+        match_number:
+          type: number
+          description: "Número de partido jugado en el torneo"
+          example: 1
+        winner:
+          type: string
+          description: "Ganador individual del partido. Unicamente es devuelto si el partido es single"
+          example: "Donnie T."
+        group_winner:
+          type: string
+          description: "Grupo ganador del partido. Unicamente es devuelto si el partido es double"
+          example: "Donnie T."
+        player_one:
+          type: string
+          description:  "Nombre del jugadores 1. Unicamente es devuelto si el partido es single"
+          example: "Giuseppe F."
+        player_two:
+          type: string
+          description:  "Nombre del jugadores 2. Unicamente es devuelto si el partido es single"
+          example: "Donnie T."
+        group_one:
+          type: string
+          description:  "Nombre del grupo 1. Unicamente es devuelto si el partido es double"
+          example: "Giuseppe F."
+        group_two:
+          type: string
+          description:  "Nombre del grupo 2. Unicamente es devuelto si el partido es double"
+          example: "Donnie T."
+        winner_set_one:
+          type: string
+          description:  "Nombre del jugador o grupo ganador del 1er. set"
+          example: "Donnie T."
+        set_one:
+          type: string
+          description: "Resultado del 1er. set"
+          example: "0-6"
+        winner_set_two:
+          type: string
+          description:  "Nombre del jugador o grupo ganador 2do. del set"
+          example: "Giuseppe F."
+        set_two:
+          type: string
+          description: "Resultado del 2er. set"
+          example: "0-6"
+        winner_set_three:
+          type: string
+          description:  "Nombre del jugador o grupo ganador 3do. del set"
+          example: "Donnie T."
+        set_three:
+          type: string
+          description: "Resultado del 3er. set"
+          example: "0-6"
+    TournamentRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: "Nombre del torneo."
+          example: "US Open"
+        category:
+          type: string
+          description: "Categoria del torneo."
+          example: "women"
+        date:
+          type: string
+          description: "Fecha de incio del torneo."
+          example: "2025-09-10"
+        team:
+          type: number
+          description: "Indica si el torneo es individual o grupal. Si es `1` el torneo es grupal. Si es `0` es torneo es individual."
+          example: 1
+        players:
+          type: number
+          description: "Cantidad de jugadores anotados en el torneo."
+          example: 16
+    TournamentResponse:
+      type: object
+      properties:
+        id:
+          type: number
+          example: 1
+        name:
+          type: string
+          description: "Nombre del torneo."
+          example: "US Open"
+        category:
+          type: string
+          description: "Categoria del torneo."
+          example: "women"
+        date:
+          type: string
+          description: "Fecha de incio del torneo."
+          example: "2025-09-10"
+        team:
+          type: number
+          description: "Indica si el torneo es individual o grupal. Si es `1` el torneo es grupal. Si es `0` es torneo es individual."
+          example: 1
+        players:
+          type: number
+          description: "Cantidad de jugadores anotados en el torneo."
+          example: 16
+        winner_player:
+          type: string
+          description: "Ganador del torneo.  Unicamente es devuelto si el partido es single."
+          example: "David N."
+        second_player:
+          type: string
+          description: "Segundo puesto del torneo.  Unicamente es devuelto si el partido es single."
+          example: "Robert F."
+        winner_group:
+          type: string
+          description: "Ganador del torneo. Unicamente es devuelto si el partido es double"
+          example: "Juan P. & Gonzalo M. - Argentina"
+        second_group:
+          type: string
+          description: "Segundo puesto del torneo. Unicamente es devuelto si el partido es double"
+          example: "Gonzalo H. & Rodrigo P. - Israel"
+    DoneTournament:
+      type: object
+      properties:
+        tournament:
+          $ref: "#/components/schemas/TournamentResponse"
+        lastMatch:
+          $ref: "#/components/schemas/MatchesResponse"
+        players:
+          type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/PlayersResponse"
+        matches:
+          type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/MatchesResponse"
+        groups:
+          type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/GroupResponse"
+    PlayerRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: "Nombre del torneo"
+          example: "US Open"
+        category:
+          type: string
+          description: "Indicar categoria del torneo. Esta debe concidir con la categoria de todos los jugadores"
+          example: "women"
+        date:
+          type: string
+          description: "Indicar fecha de incio del torneo"
+          example: "2025-09-10"
+        players:
+          type: array
+          description: "Listado de id de jugadores que participaran en el torneo"
+          example: "[15,2,3]"
+    NewPlayerRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: "Nombre del torneo"
+          example: "US Open"
+        category:
+          type: string
+          description: "Indicar categoria del torneo. Esta debe concidir con la categoria de todos los jugadores"
+          example: "women"
+        date:
+          type: string
+          description: "Indicar fecha de incio del torneo"
+          example: "2025-09-10"
+        players:
+          type: array
+          description: "Listado de jugadores a registrar"
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                description: "Nombre del jugador"
+                example: "Giuseppe Feil"
+              level:
+                type: number
+                description: "Nivel de habilidad de jugador"
+                example: 90
+              speed:
+                type: number
+                description: "Nivel de habilidad de jugador"
+                example: 30
+              reaction:
+                type: number
+                description: "Tiempo de reaccion de jugador"
+                example: 30
+              power:
+                type: number
+                description: "Fuerza de jugador"
+                example: 30
+    ExceptionApi:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Invalid order parameter
+        code:
+          type: number
+          example: 404
+    Validation:
+      type: object
+      properties:
+        message:
+          type: string
+          example: The selected category is invalid.
+        errors:
+          type: array
+          items:
+            properties:
+              parameter:
+                type: array
+                items:
+                  type: string
+
+
+
+
