@@ -4,7 +4,7 @@ Este proyecto se desarrolló para gestionar torneos de tenis. Proporciona una AP
 
 
 
-## Teconologias usadas
+## Tecnologías  usadas
 
 **Laravel 11**: Framework PHP utilizado para desarrollar la API.
 
@@ -16,7 +16,7 @@ Este proyecto se desarrolló para gestionar torneos de tenis. Proporciona una AP
 
 
 
-## Instalacion
+## Instalación
 
 1. Clonar el repositorio:
 
@@ -66,7 +66,7 @@ Luego, ejecuta:
 ```
 
 
-## Documentation
+## Documentación
 
 Puedes acceder a la documentación de la API a través del servicio Docker en la siguiente URL:
 
